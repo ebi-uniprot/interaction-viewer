@@ -7,7 +7,9 @@ const sparqlLoader = {
     nodes.splice(0, 0, nodes.splice(_.pluck(nodes, 'accession').lastIndexOf(accession), 1)[0]);
   },
   isDuplicateEdge: function(edges, edge) {
-    return _.find(edges, function(d) { return (d.source === edge.source && d.target === edge.target)});
+    return _.find(edges, function(d) {
+      return (d.source === edge.source && d.target === edge.target);
+    });
   },
   processData: function(accession, nodeData, edgeData) {
 

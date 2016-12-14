@@ -1,16 +1,6 @@
 const d3 = require('d3');
-const sparqlLoader = require('./sparqlLoader');
+const apiLoader = require('./apiLoader');
 const _ = require('underscore');
-
-const filters = [{
-  name: 'Disease',
-  value: 'disease',
-  filter: false
-}, {
-  name: 'Subcellular location',
-  value: 'subcell',
-  filter: false
-}];
 
 module.exports.render = function({
   el = required('el'),
@@ -24,11 +14,16 @@ module.exports.render = function({
   // show spinner until data is loaded
   d3.select(el).append('div').attr('class','interaction-spinner');
 
-  sparqlLoader.loadData(accession).then(data => {
+  apiLoader.load().then(data => {
+    draw(el, accession, data);
+  });
+};
+
+function draw(el, accession, data) {
+
     d3.select(el).select('.interaction-spinner').remove();
 
-    let nodes = data.nodes,
-      links = data.links;
+    let nodes = data;
 
     var tooltip = d3.select(el).append("div")
         .attr("class", "interaction-tooltip")
@@ -65,7 +60,10 @@ module.exports.render = function({
       .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
     x.domain(nodes.map(entry => entry.accession));
-    intensity.domain([0, d3.max(links.map(link => link.experiments))]);
+    intensity.domain([0, 10]);
+
+    // x.domain(nodes.map(entry => entry.accession));
+    // intensity.domain([0, d3.max(nodes.map(link => link.experiments))]);
 
     const row = svg.selectAll(".interaction-row")
       .data(nodes)
@@ -85,7 +83,7 @@ module.exports.render = function({
       .attr("y", x.rangeBand() / 2)
       .attr("dy", ".32em")
       .attr("text-anchor", "end")
-      .text((d, i) => nodes[i].entryName)
+      .text((d, i) => nodes[i].id)
       .attr('class', (d,i) => (nodes[i].accession === accession)? "main-accession" : "");
 
     const column = svg.selectAll(".column")
@@ -106,8 +104,9 @@ module.exports.render = function({
       .attr("y", x.rangeBand() / 2)
       .attr("dy", ".32em")
       .attr("text-anchor", "start")
-      .text((d, i) => nodes[i].entryName)
+      .text((d, i) => nodes[i].id)
       .attr('class', (d,i) => (nodes[i].accession === accession)? "main-accession" : "");
+
     var points = `${x(nodes[1].accession)} 0,${x(nodes[nodes.length-1].accession)} 0,${x(nodes[nodes.length-1].accession)} ${x(nodes[nodes.length-1].accession)},${x(nodes[0].accession)} 0`;
 
     svg.append("polyline")
@@ -115,25 +114,29 @@ module.exports.render = function({
       .attr("class", "hidden-side")
       .attr("transform", d => `translate(${x(nodes[1].accession)}, 0)`);
 
-    createFilter(el);
+    createFilter(el, data.filters);
 
     function processRow(row) {
-      const filtered = links.filter(d => d.source === row.accession);
+      if(!row.interactions) {
+        return;
+      }
+
 
       var cell = d3.select(this).selectAll(".cell")
-        .data(filtered);
+        .data(row.interactions);
 
       var circle = cell.enter().append("circle");
 
       circle.attr("class", "cell")
         .attr("cx", d => {
-          return x(d.target) + x.rangeBand() / 2;
+          return x(d.id) + x.rangeBand() / 2;
         })
         .attr("cy", d => x.rangeBand() / 2)
         .attr("r", x.rangeBand() / 3)
         .style("fill-opacity", d => intensity(d.experiments))
         .style("display", d => {
-          return (x(d.target)-x(row.accession) > 0)? "none" : "";
+          //Only show left half of graph
+          return (x(row.accession)<x(d.id))? "none" : "";
         })
         .on("click", mouseclick)
         .on("mouseover", mouseover)
@@ -144,8 +147,9 @@ module.exports.render = function({
 
     function mouseover(p) {
       d3.select(this).classed("active-cell", true);
-      d3.selectAll(".interaction-row").classed("active", d => d.accession === p.source);
-      d3.selectAll(".column").classed("active", d => d.accession === p.target);
+      // console.log(p);
+      d3.selectAll(".interaction-row").classed("active", d => d.accession === p.id);
+      // d3.selectAll(".column").classed("active", d => d.accession === p.id);
 
       d3.selectAll('.interaction-viewer-group')
             .append('line')
@@ -153,7 +157,7 @@ module.exports.render = function({
             .attr('style','opacity:0')
             .attr('x1',0)
             .attr('y1',x(p.source) + x.rangeBand() / 2)
-            .attr('x2',x(p.target))
+            .attr('x2',x(p.id))
             .attr('y2',x(p.source)+ x.rangeBand() / 2)
             .transition(50)
             .attr('style','opacity:.5');
@@ -162,9 +166,9 @@ module.exports.render = function({
             .append('line')
             .attr('class','active-row')
             .attr('style','opacity:0')
-            .attr('x1',x(p.target) + x.rangeBand() / 2)
+            .attr('x1',x(p.id) + x.rangeBand() / 2)
             .attr('y1',0)
-            .attr('x2',x(p.target) + x.rangeBand() / 2)
+            .attr('x2',x(p.id) + x.rangeBand() / 2)
             .attr('y2',x(p.source))
             .transition(50)
             .attr('style','opacity:.5');
@@ -182,7 +186,8 @@ module.exports.render = function({
       element.html('');
 
       let source = _.find(nodes, d => d.accession === data.source);
-      let target = _.find(nodes, d => d.accession === data.target);
+      let target = _.find(nodes, d => d.accession === data.id);
+      console.log(source, target);
 
       element.append('h3').text('Interaction');
       element.append('p').text(`Confirmed by ${data.experiments} experiment(s)`);
@@ -196,20 +201,20 @@ module.exports.render = function({
       var nameRow = table.append('tr');
       nameRow.append('td').text('Name').attr('class','interaction-viewer-table_row-header');
       nameRow.append('td')
-          .text(`${source.entryName}`);
+          .text(`${source.id}`);
       nameRow.append('td')
-          .text(`${target.entryName}`);
+          .text(`${target.id}`);
 
       var uniprotRow = table.append('tr');
       uniprotRow.append('td').text('UniProtKB').attr('class','interaction-viewer-table_row-header');
       uniprotRow.append('td')
           .append('a')
-          .attr('href',`//uniprot.org/uniprot/${data.source}`)
-          .text(`${data.source}`);
+          .attr('href',`//uniprot.org/uniprot/${source.accession}`)
+          .text(`${source.accession}`);
       uniprotRow.append('td')
           .append('a')
-          .attr('href',`//uniprot.org/uniprot/${data.target}`)
-          .text(`${data.target}`);
+          .attr('href',`//uniprot.org/uniprot/${target.accession}`)
+          .text(`${target.accession}`);
 
       var diseaseRow = table.append('tr');
       diseaseRow.append('td').text('Disease association').attr('class','interaction-viewer-table_row-header');
@@ -226,23 +231,11 @@ module.exports.render = function({
        intactRow.append('td')
                   .attr('colspan',2)
                 .append('a')
-                .attr('href', getIntactLink(data.intact))
-                .text(data.intact);
+                .attr('href', getIntactLink(data.interactor1, data.interactor2))
+                .text(`${data.interactor1};${data.interactor2}`);
     }
 
-    function getIntactLink(intactIds) {
-      let url = '//www.ebi.ac.uk/intact/query/';
-      var first = true;
-      for(var id of intactIds) {
-        if(!first){
-          url+=` AND id:${id}`;
-        }
-        else{
-          first = false;
-          url+=`id:${id}`;
-        }
-      }
-      return url;
+    function getIntactLink(interactor1, interactor2) { return `//www.ebi.ac.uk/intact/query/id:${interactor1} AND id:${interactor2}`;
     }
 
     function mouseout() {
@@ -256,16 +249,15 @@ module.exports.render = function({
         .style("opacity", 0)
         .style("display", "none");
     }
+}
 
-  });
-};
-
-function filter(_filter) {
+function filterData(filters, _filter) {
   toggle(_filter);
   let visible = _.filter(filters, d => d.visible);
   const hide = [];
   d3.selectAll('text')
     .attr('opacity', d => {
+      console.log(d);
       let show = _.every(visible, filter => {
         return d[filter.value];
       });
@@ -281,35 +273,36 @@ function filter(_filter) {
     });
 }
 
-function toggle(_filter) {
+function toggle(filters, _filter) {
   var match = _.find(filters, d => _filter === d.value);
   match.visible = match.visible ? false : true;
 }
 
-function createFilter(el) {
+function createFilter(el, filters) {
   d3.select(el).selectAll(".interaction-filter").remove();
   const container = d3.select(el).append("div")
     .attr("class", "interaction-filter");
 
   container.append("label").text('Show only interactions where one or both interactors have:');
+  for(let filter of filters) {
+    container.append("h4").text(filter.label);
 
-  var listItem = container.append("ul")
-    .selectAll('li')
-    .data(filters)
-    .enter()
-    .append('li');
+    var listItem = container.append("ul")
+      .selectAll('li')
+      .data(filter.items)
+      .enter()
+      .append('li');
 
-  listItem.append('input')
-    .attr('type', 'checkbox')
-    .attr('id', d => d.value)
-    .property('checked', d => {
-      return d.filter;
-    })
-    .on('click', d => filter(d.value));
+    listItem.append('input')
+      .attr('type', 'checkbox')
+      .property('checked', d => {
+        return d.checked;
+      })
+      .on('click', d => filterData(filters, d.name));
 
-  listItem.append('label')
-    .text(d => `${d.name.toLowerCase()} annotation`)
-    .attr('for', d => d.value);
+    listItem.append('label')
+      .text(d => d.name.toLowerCase());
+  }
 }
 
 function required(name) {
