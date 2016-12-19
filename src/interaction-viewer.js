@@ -14,7 +14,7 @@ module.exports.render = function({
   // show spinner until data is loaded
   d3.select(el).append('div').attr('class','interaction-spinner');
 
-  apiLoader.load().then(data => {
+  apiLoader.load(accession).then(data => {
     draw(el, accession, data);
   });
 };
@@ -83,7 +83,9 @@ function draw(el, accession, data) {
       .attr("y", x.rangeBand() / 2)
       .attr("dy", ".32em")
       .attr("text-anchor", "end")
-      .text((d, i) => nodes[i].id)
+      .text((d, i) => {
+        return nodes[i].name;
+      })
       .attr('class', (d,i) => (nodes[i].accession === accession)? "main-accession" : "");
 
     const column = svg.selectAll(".column")
@@ -104,7 +106,7 @@ function draw(el, accession, data) {
       .attr("y", x.rangeBand() / 2)
       .attr("dy", ".32em")
       .attr("text-anchor", "start")
-      .text((d, i) => nodes[i].id)
+      .text((d, i) => nodes[i].name)
       .attr('class', (d,i) => (nodes[i].accession === accession)? "main-accession" : "");
 
     var points = `${x(nodes[1].accession)} 0,${x(nodes[nodes.length-1].accession)} 0,${x(nodes[nodes.length-1].accession)} ${x(nodes[nodes.length-1].accession)},${x(nodes[0].accession)} 0`;
@@ -147,7 +149,6 @@ function draw(el, accession, data) {
 
     function mouseover(p) {
       d3.select(this).classed("active-cell", true);
-      // console.log(p);
       d3.selectAll(".interaction-row").classed("active", d => d.accession === p.id);
       // d3.selectAll(".column").classed("active", d => d.accession === p.id);
 
@@ -187,7 +188,6 @@ function draw(el, accession, data) {
 
       let source = _.find(nodes, d => d.accession === data.source);
       let target = _.find(nodes, d => d.accession === data.id);
-      console.log(source, target);
 
       element.append('h3').text('Interaction');
       element.append('p').text(`Confirmed by ${data.experiments} experiment(s)`);
@@ -201,9 +201,9 @@ function draw(el, accession, data) {
       var nameRow = table.append('tr');
       nameRow.append('td').text('Name').attr('class','interaction-viewer-table_row-header');
       nameRow.append('td')
-          .text(`${source.id}`);
+          .text(`${source.name}`);
       nameRow.append('td')
-          .text(`${target.id}`);
+          .text(`${target.name}`);
 
       var uniprotRow = table.append('tr');
       uniprotRow.append('td').text('UniProtKB').attr('class','interaction-viewer-table_row-header');
@@ -257,7 +257,6 @@ function filterData(filters, _filter) {
   const hide = [];
   d3.selectAll('text')
     .attr('opacity', d => {
-      console.log(d);
       let show = _.every(visible, filter => {
         return d[filter.value];
       });
