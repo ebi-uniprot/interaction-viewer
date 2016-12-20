@@ -12,6 +12,14 @@ var process = function(data) {
 
     // Add source  to the nodes
     _.each(element.interactions, function(interactor) {
+      // Add interaction for SELF
+      if(interactor.interactionType === 'SELF') {
+        interactor.source = element.accession;
+        interactor.id = element.accession;
+        interactors.push(interactor);
+      }
+      // TODO review this as it's not nice.
+      // TODO also save the reverse??
       if (_.some(data, function(d) {
           return d.accession === interactor.id;
         })) {

@@ -21,6 +21,32 @@ module.exports.render = function({
   });
 };
 
+function formatDiseaseInfo(data) {
+  if(data) {
+    let formatedString = '';
+    for(var disease of data) {
+      formatedString += `<p><a href="//omim.org/entry/${disease.dbReference.id}" target="_blank">${disease.diseaseId}</a></p>`;
+    }
+    return formatedString;
+  } else {
+    return 'N/A';
+  }
+}
+
+function formatSubcellularLocationInfo(data) {
+  if(data) {
+    let formatedString = '';
+    for(var interactionType of data) {
+      for(var location of interactionType.locations){
+        formatedString += `<p>${location.location.value}</p>`;
+      }
+    }
+    return formatedString;
+  } else {
+    return 'N/A';
+  }
+}
+
 function draw(el, accession, data) {
 
     d3.select(el).select('.interaction-spinner').remove();
@@ -219,14 +245,14 @@ function draw(el, accession, data) {
           .text(`${target.accession}`);
 
       var diseaseRow = table.append('tr');
-      diseaseRow.append('td').text('Disease association').attr('class','interaction-viewer-table_row-header');
-      diseaseRow.append('td').text(source.disease ? 'Y' : 'N');
-      diseaseRow.append('td').text(target.disease ? 'Y' : 'N');
+      diseaseRow.append('td').text('Disease').attr('class','interaction-viewer-table_row-header');
+      diseaseRow.append('td').html(formatDiseaseInfo(source.diseases));
+      diseaseRow.append('td').html(formatDiseaseInfo(target.diseases));
 
       var subcellRow = table.append('tr');
       subcellRow.append('td').text('Subcellular location').attr('class','interaction-viewer-table_row-header');
-      subcellRow.append('td').text(source.subcell ? 'Y' : 'N');
-      subcellRow.append('td').text(target.subcell ? 'Y' : 'N');
+      subcellRow.append('td').html(formatSubcellularLocationInfo(source.subcellularLocations));
+      subcellRow.append('td').html(formatSubcellularLocationInfo(target.subcellularLocations));
 
        var intactRow = table.append('tr');
        intactRow.append('td').text('IntAct').attr('class','interaction-viewer-table_row-header');
@@ -234,10 +260,12 @@ function draw(el, accession, data) {
                   .attr('colspan',2)
                 .append('a')
                 .attr('href', getIntactLink(data.interactor1, data.interactor2))
+                .attr('target', '_blank')
                 .text(`${data.interactor1};${data.interactor2}`);
     }
 
-    function getIntactLink(interactor1, interactor2) { return `//www.ebi.ac.uk/intact/query/id:${interactor1} AND id:${interactor2}`;
+    function getIntactLink(interactor1, interactor2) {
+      return `//www.ebi.ac.uk/intact/query/id:${interactor1} AND id:${interactor2}`;
     }
 
     function mouseout() {
@@ -259,6 +287,8 @@ function getNodeByAccession(accession) {
   });
 }
 
+// Check if either the source or the target contain one of the specified filters.
+// returns true if no filters selected
 function hasFilterMatch(source, target, filters) {
   if(filters.length <= 0) {
     return true;
@@ -267,6 +297,7 @@ function hasFilterMatch(source, target, filters) {
         _.intersection(target.filterTerms, _.pluck(filters, 'name')).length > 0;
 }
 
+// Hide nodes and labels which don't belong to a visible filter
 function filterData(_filter) {
   toggle(_filter);
   let visibleFilters = _.filter(flatFilters, d => d.visible);
@@ -302,24 +333,26 @@ function createFilter(el, filters) {
 
   container.append("label").text('Show only interactions where one or both interactors have:');
   for(let filter of filters) {
-    flatFilters = flatFilters.concat(filter.items);
-    container.append("h4").text(filter.label);
+    if (filter.items.length > 0) {
+      flatFilters = flatFilters.concat(filter.items);
+      container.append("h4").text(filter.label);
 
-    var listItem = container.append("ul")
-      .selectAll('li')
-      .data(filter.items)
-      .enter()
-      .append('li');
+      var listItem = container.append("ul")
+        .selectAll('li')
+        .data(filter.items)
+        .enter()
+        .append('li');
 
-    listItem.append('input')
-      .attr('type', 'checkbox')
-      .property('checked', d => {
-        return d.checked;
-      })
-      .on('click', d => filterData(d.name));
+      listItem.append('input')
+        .attr('type', 'checkbox')
+        .property('checked', d => {
+          return d.checked;
+        })
+        .on('click', d => filterData(d.name));
 
-    listItem.append('label')
-      .text(d => d.name.toLowerCase());
+      listItem.append('label')
+        .text(d => d.name.toLowerCase());
+    }
   }
 }
 
