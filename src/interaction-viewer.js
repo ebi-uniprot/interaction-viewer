@@ -1,6 +1,8 @@
 const d3 = require('d3');
 const apiLoader = require('./apiLoader');
 const _ = require('underscore');
+let flatFilters = [];
+let nodes;
 
 module.exports.render = function({
   el = required('el'),
@@ -23,7 +25,7 @@ function draw(el, accession, data) {
 
     d3.select(el).select('.interaction-spinner').remove();
 
-    let nodes = data;
+    nodes = data;
 
     var tooltip = d3.select(el).append("div")
         .attr("class", "interaction-tooltip")
@@ -251,32 +253,48 @@ function draw(el, accession, data) {
     }
 }
 
-function filterData(filters, _filter) {
-  toggle(_filter);
-  let visible = _.filter(filters, d => d.visible);
-  const hide = [];
-  d3.selectAll('text')
-    .attr('opacity', d => {
-      let show = _.every(visible, filter => {
-        return d[filter.value];
-      });
-      if(!show) {
-        hide.push(d.accession);
-      }
-      return show ? 1 : 0.1;
-    });
+function getNodeByAccession(accession) {
+  return _.find(nodes, function(node){
+    return node.accession === accession;
+  });
+}
 
+function hasFilterMatch(source, target, filters) {
+  if(filters.length <= 0) {
+    return true;
+  }
+  return _.intersection(source.filterTerms, _.pluck(filters, 'name')).length > 0 ||
+        _.intersection(target.filterTerms, _.pluck(filters, 'name')).length > 0;
+}
+
+function filterData(_filter) {
+  toggle(_filter);
+  let visibleFilters = _.filter(flatFilters, d => d.visible);
+  let visibleAccessions = [];
   d3.selectAll('.cell')
     .attr('opacity', d => {
-      return (_.contains(hide, d.source) && _.contains(hide, d.target)) ? 0.1 :1;
+      const source = getNodeByAccession(d.source);
+      const target = getNodeByAccession(d.id);
+      const visible = hasFilterMatch(source, target, visibleFilters);
+      if(visible) {
+        visibleAccessions.push(source.accession);
+        visibleAccessions.push(target.accession);
+      }
+      return visible ? 1 :0.1;
+    });
+  d3.selectAll('text')
+    .attr('fill-opacity', d => {
+      return (_.contains(visibleAccessions, d.accession)) ? 1 : 0.1;
     });
 }
 
-function toggle(filters, _filter) {
-  var match = _.find(filters, d => _filter === d.value);
+// Toggle the visible state of a given filter
+function toggle(_filter) {
+  var match = _.find(flatFilters, d => _filter === d.name);
   match.visible = match.visible ? false : true;
 }
 
+// Add a filter to the interface
 function createFilter(el, filters) {
   d3.select(el).selectAll(".interaction-filter").remove();
   const container = d3.select(el).append("div")
@@ -284,6 +302,7 @@ function createFilter(el, filters) {
 
   container.append("label").text('Show only interactions where one or both interactors have:');
   for(let filter of filters) {
+    flatFilters = flatFilters.concat(filter.items);
     container.append("h4").text(filter.label);
 
     var listItem = container.append("ul")
@@ -297,7 +316,7 @@ function createFilter(el, filters) {
       .property('checked', d => {
         return d.checked;
       })
-      .on('click', d => filterData(filters, d.name));
+      .on('click', d => filterData(d.name));
 
     listItem.append('label')
       .text(d => d.name.toLowerCase());
