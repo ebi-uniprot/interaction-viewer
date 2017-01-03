@@ -20,7 +20,7 @@ var process = function(data) {
       }
       // TODO review this as it's not nice.
       // TODO also save the reverse??
-      if (_.some(data, function(d) {
+      else if (_.some(data, function(d) {
           return d.accession === interactor.id;
         })) {
         interactor.source = element.accession;

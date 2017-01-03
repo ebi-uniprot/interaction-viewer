@@ -25,7 +25,13 @@ function formatDiseaseInfo(data) {
   if(data) {
     let formatedString = '';
     for(var disease of data) {
-      formatedString += `<p><a href="//omim.org/entry/${disease.dbReference.id}" target="_blank">${disease.diseaseId}</a></p>`;
+      if(disease.dbReference) { //Some have only text
+        formatedString += `<p><a href="//omim.org/entry/${disease.dbReference.id}" target="_blank">${disease.diseaseId}</a></p>`;
+      } if (disease.text) {
+        for(var comment of disease.text) {
+          formatedString += `<p>${comment.value}</p>`;
+        }
+      }
     }
     return formatedString;
   } else {
@@ -245,7 +251,7 @@ function draw(el, accession, data) {
           .text(`${target.accession}`);
 
       var diseaseRow = table.append('tr');
-      diseaseRow.append('td').text('Disease').attr('class','interaction-viewer-table_row-header');
+      diseaseRow.append('td').text('Pathology').attr('class','interaction-viewer-table_row-header');
       diseaseRow.append('td').html(formatDiseaseInfo(source.diseases));
       diseaseRow.append('td').html(formatDiseaseInfo(target.diseases));
 
