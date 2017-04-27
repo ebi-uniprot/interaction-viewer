@@ -12,7 +12,8 @@
     "sass": "npm run sass:dist",
     "watch": "nodemon -w src -w styles/main.scss -w index.html -x 'npm run build && npm run sass'",
     "serve": "npm run watch & npm run browsersync",
-    "deploy": "git push origin `git subtree split --prefix dist master`:gh-pages --force"
+    "deploy": "git push origin `git subtree split --prefix dist master`:gh-pages --force",
+    "test": "mocha -w"
   },
   "keywords": [
     "interaction",
@@ -29,6 +30,8 @@
     "babelify": "^7.3.0",
     "browser-sync": "^2.12.5",
     "browserify": "^13.0.1",
+    "chai": "^3.5.0",
+    "mocha": "^3.3.0",
     "node-sass": "^3.7.0",
     "nodemon": "^1.9.2",
     "uglify-js": "^2.7.4"

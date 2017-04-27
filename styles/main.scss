@@ -60,10 +60,25 @@ interaction-viewer {
   .interaction-filter {
     vertical-align: top;
     margin-bottom: .5em;
+    display: inline-block;
     ul {
+      border: $lightgrey 1px solid;
+      max-height: 15em;
+      overflow-y: auto;
       list-style:none;
-      padding: .2em;
+      padding: 0;
       margin: 0;
+      li {
+        cursor: pointer;
+        padding: .5em .5em;
+        border-bottom: $lightgrey 1px solid;
+        &:hover {
+          background-color: $verylightgrey;
+        }
+        &.active {
+          font-weight: bold;
+        }
+      }
     }
   }
 

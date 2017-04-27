@@ -1,6 +1,8 @@
 const d3 = require('d3');
 const apiLoader = require('./apiLoader');
+const treeMenu = require('./treeMenu');
 const _ = require('underscore');
+let selectedFilters = [];
 let flatFilters = [];
 let nodes;
 
@@ -150,7 +152,7 @@ function draw(el, accession, data) {
       .attr("class", "hidden-side")
       .attr("transform", d => `translate(${x(nodes[1].accession)}, 0)`);
 
-    createFilter(el, data.filters);
+    createFilter(el, apiLoader.getFilters());
 
     function processRow(row) {
       if(!row.interactions) {
@@ -331,6 +333,17 @@ function toggle(_filter) {
   match.visible = match.visible ? false : true;
 }
 
+function clickFilter(d) {
+  //TODO If descendants are selected: deselect them
+  //TODO If parent is selected: deselect it
+
+  selectedFilters.push(d);
+  var alreadyActive = d3.select(this).classed("active");
+  d3.select(this).classed("active", !alreadyActive);
+  console.log(treeMenu.getPath(d, d.name));
+  filterData(d.name);
+}
+
 // Add a filter to the interface
 function createFilter(el, filters) {
   d3.select(el).selectAll(".interaction-filter").remove();
@@ -340,24 +353,28 @@ function createFilter(el, filters) {
   container.append("label").text('Show only interactions where one or both interactors have:');
   for(let filter of filters) {
     if (filter.items.length > 0) {
-      flatFilters = flatFilters.concat(filter.items);
       container.append("h4").text(filter.label);
+      if(filter.type === 'tree'){
+        var ul = container.append("ul");
+        treeMenu.traverseTree(filter.items, function(d){
+          flatFilters.push(d.name);
+          ul.datum(d)
+            .append('li')
+              .style("padding-left", d.depth + "em")
+              .text(d => d.name)
+              .on('click', clickFilter);
+        });
+      } else {
+        flatFilters = flatFilters.concat(filter.items);
 
-      var listItem = container.append("ul")
-        .selectAll('li')
-        .data(filter.items)
-        .enter()
-        .append('li');
-
-      listItem.append('input')
-        .attr('type', 'checkbox')
-        .property('checked', d => {
-          return d.checked;
-        })
-        .on('click', d => filterData(d.name));
-
-      listItem.append('label')
-        .text(d => d.name.toLowerCase());
+        container.append("ul")
+          .selectAll('li')
+          .data(filter.items)
+          .enter()
+          .append('li')
+          .text(d => d.name.toLowerCase())
+          .on('click', clickFilter);
+      }
     }
   }
 }

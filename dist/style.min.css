@@ -33,11 +33,23 @@ interaction-viewer {
       clear: both; }
   interaction-viewer .interaction-filter {
     vertical-align: top;
-    margin-bottom: .5em; }
+    margin-bottom: .5em;
+    display: inline-block; }
     interaction-viewer .interaction-filter ul {
+      border: #E8E8E8 1px solid;
+      max-height: 15em;
+      overflow-y: auto;
       list-style: none;
-      padding: .2em;
+      padding: 0;
       margin: 0; }
+      interaction-viewer .interaction-filter ul li {
+        cursor: pointer;
+        padding: .5em .5em;
+        border-bottom: #E8E8E8 1px solid; }
+        interaction-viewer .interaction-filter ul li:hover {
+          background-color: #F2F2F2; }
+        interaction-viewer .interaction-filter ul li.active {
+          font-weight: bold; }
   interaction-viewer .interaction-viewer .cell {
     fill: #4A90E2; }
     interaction-viewer .interaction-viewer .cell.active-cell {
