@@ -10,7 +10,7 @@ const addToTree = function(nodes, items, parent) {
   }
   let node = {
     name: items[0],
-    checked: false,
+    selected: false,
     parent: parent,
     children: [],
   };
@@ -46,7 +46,7 @@ const treeMenu = {
   },
   getPath: function(target, path) {
     if(target.parent) {
-      path = `${target.parent.name} > ${path}`;
+      path.push(target.parent);
       return treeMenu.getPath(target.parent, path);
     } else {
       return path;

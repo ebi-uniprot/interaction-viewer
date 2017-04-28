@@ -2,7 +2,7 @@ const d3 = require('d3');
 const apiLoader = require('./apiLoader');
 const treeMenu = require('./treeMenu');
 const _ = require('underscore');
-let selectedFilters = [];
+let filters = [];
 let flatFilters = [];
 let nodes;
 
@@ -329,38 +329,55 @@ function filterData(_filter) {
 
 // Toggle the visible state of a given filter
 function toggle(_filter) {
-  var match = _.find(flatFilters, d => _filter === d.name);
-  match.visible = match.visible ? false : true;
+  // var match = _.find(flatFilters, d => _filter === d.name);
+  // match.visible = match.visible ? false : true;
+}
+
+function updateFilterSelection() {
+  for(let filter of filters) {
+    let item = d3.select(`#${getNameAsHTMLId(filter.name)}`);
+    item.classed("active", filter.selected);
+  }
+}
+
+function getNameAsHTMLId(name) {
+  return name.replace(/ /g,'_');
 }
 
 function clickFilter(d) {
-  //TODO If descendants are selected: deselect them
-  //TODO If parent is selected: deselect it
+  //De-select any descendants
+  treeMenu.traverseTree([d], node => node.selected = false);
 
-  selectedFilters.push(d);
-  var alreadyActive = d3.select(this).classed("active");
-  d3.select(this).classed("active", !alreadyActive);
-  console.log(treeMenu.getPath(d, d.name));
-  filterData(d.name);
+  //De-select any parent
+  let path = treeMenu.getPath(d, []);
+  for(let node of path) {
+    node.selected = false;
+  }
+  console.log(d.selected);
+  d.selected = !d.selected;
+  console.log(d.selected);
+  updateFilterSelection();
+  // filterData(d.name);
 }
 
 // Add a filter to the interface
-function createFilter(el, filters) {
+function createFilter(el, filtersToAdd) {
   d3.select(el).selectAll(".interaction-filter").remove();
   const container = d3.select(el).append("div")
     .attr("class", "interaction-filter");
 
   container.append("label").text('Show only interactions where one or both interactors have:');
-  for(let filter of filters) {
+  for(let filter of filtersToAdd) {
     if (filter.items.length > 0) {
       container.append("h4").text(filter.label);
       if(filter.type === 'tree'){
         var ul = container.append("ul");
         treeMenu.traverseTree(filter.items, function(d){
-          flatFilters.push(d.name);
+          filters.push(d);
           ul.datum(d)
             .append('li')
               .style("padding-left", d.depth + "em")
+              .attr("id", d => getNameAsHTMLId(d.name))
               .text(d => d.name)
               .on('click', clickFilter);
         });

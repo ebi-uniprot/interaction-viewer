@@ -31,8 +31,8 @@ describe("treeMenu", function() {
 
   it("should get the path from root", function() {
     treeMenu.findNode(tree, "Item 3", d => {
-      let path = treeMenu.getPath(d, d.name);
-      expect(path).to.equal("Item 1 > Item 2 > Item 3");
+      let path = treeMenu.getPath(d, []);
+      expect(path.length).to.equal(2);
     });
   });
 });
