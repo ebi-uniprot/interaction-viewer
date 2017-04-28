@@ -341,21 +341,25 @@ function updateFilterSelection() {
 }
 
 function getNameAsHTMLId(name) {
-  return name.replace(/ /g,'_');
+  return name.toLowerCase().replace(/\s|,/g,'_');
 }
 
 function clickFilter(d) {
+  d.selected = !d.selected;
+  updateFilterSelection();
+}
+
+function clickTreeFilter(d) {
+  d.selected = !d.selected;
+
   //De-select any descendants
-  treeMenu.traverseTree([d], node => node.selected = false);
+  treeMenu.traverseTree(d.children, node => node.selected = false);
 
   //De-select any parent
   let path = treeMenu.getPath(d, []);
   for(let node of path) {
     node.selected = false;
   }
-  console.log(d.selected);
-  d.selected = !d.selected;
-  console.log(d.selected);
   updateFilterSelection();
   // filterData(d.name);
 }
@@ -379,16 +383,20 @@ function createFilter(el, filtersToAdd) {
               .style("padding-left", d.depth + "em")
               .attr("id", d => getNameAsHTMLId(d.name))
               .text(d => d.name)
-              .on('click', clickFilter);
+              .on('click', filter.type === 'tree' ? clickTreeFilter :clickFilter);
         });
       } else {
-        flatFilters = flatFilters.concat(filter.items);
+        for(let d of filter.items) {
+          d.selected = false;
+          filters.push(d);
+        }
 
         container.append("ul")
           .selectAll('li')
           .data(filter.items)
           .enter()
           .append('li')
+          .attr('id', d => getNameAsHTMLId(d.name))
           .text(d => d.name.toLowerCase())
           .on('click', clickFilter);
       }
