@@ -20,14 +20,23 @@ const sparqlLoader = {
     };
 
     for (var element of edgeData.results.bindings) {
-      var node = {
+      var source = {
         'accession': element.source.value,
-        'entryName': element.entry_name ? element.entry_name.value : element.source.value,
-        'diseases': element.has_disease !== null,
-        'subcell': element.has_subcell !== null
+        'entryName': element.source_name ? element.source_name.value : element.source.value,
+        'diseases': element.has_source_disease !== null,
+        'subcell': element.has_source_subcell !== null
       };
-      if (!this.isDuplicateNode(json.nodes, node)){
-	json.nodes.push(node);
+      var target = {
+        'accession': element.target.value,
+        'entryName': element.target_name ? element.target_name.value : element.target.value,
+        'diseases': element.has_target_disease !== null,
+        'subcell': element.has_target_subcell !== null
+      };
+      if (!this.isDuplicateNode(json.nodes, source)){
+	json.nodes.push(source);
+      }
+      if (!this.isDuplicateNode(json.nodes, target)){
+	json.nodes.push(target);
       }
     }
     this.order(accession, json.nodes);
@@ -63,9 +72,12 @@ SELECT
     (?e AS ?exp)
     (substr(str(?sp), 32) AS ?source_intact) 
     (substr(str(?tp), 32) AS ?target_intact)
-    ?entry_name 
-    (GROUP_CONCAT(strafter(substr(str(?disease), 32), "/"); separator=',') AS ?diseases) 
-    (GROUP_CONCAT(strafter(substr(str(?location), 32), "/"); separator=',') AS ?locations) 
+    ?source_name 
+    ?target_name 
+    (GROUP_CONCAT(DISTINCT strafter(substr(str(?source_disease), 32), "/"); separator=',') AS ?source_diseases) 
+    (GROUP_CONCAT(DISTINCT strafter(substr(str(?source_location), 32), "/"); separator=',') AS ?source_locations)
+    (GROUP_CONCAT(DISTINCT strafter(substr(str(?target_disease), 32), "/"); separator=',') AS ?target_diseases) 
+    (GROUP_CONCAT(DISTINCT strafter(substr(str(?target_location), 32), "/"); separator=',') AS ?target_locations)
 FROM <http://sparql.uniprot.org/uniprot>
 WHERE
 { 
@@ -114,17 +126,26 @@ WHERE
     }
   }
   OPTIONAL {
-    ?te :mnemonic ?entry_name .
+    ?te :mnemonic ?target_name .
   } 
   OPTIONAL {
-    ?te :annotation/:disease ?disease .
+    ?se :mnemonic ?source_name .
+  } 
+  OPTIONAL {
+    ?te :annotation/:disease ?target_disease .
   }
   OPTIONAL {
-    ?te :annotation/:locatedIn/(:cellularComponent|:topology|:orientation) ?location .
+    ?te :annotation/:locatedIn/(:cellularComponent|:topology|:orientation) ?target_location .
+  }
+  OPTIONAL {
+    ?se :annotation/:disease ?source_disease .
+  }
+  OPTIONAL {
+    ?se :annotation/:locatedIn/(:cellularComponent|:topology|:orientation) ?source_location .
   }
 }
-GROUP BY ?entry_name ?se ?te ?e ?sp ?tp
-ORDER BY ?entry_name ?se ?te ?e ?sp ?tp
+GROUP BY ?source_name ?target_name ?se ?te ?e ?sp ?tp
+ORDER BY ?source_name ?target_name ?se ?te ?e ?sp ?tp
 `);
       var url = sparql_uniprot_org + "?query=%23uuw%0A%0D"+q+"&format=srj";
       d3.json(url, data => {
