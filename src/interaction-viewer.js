@@ -306,15 +306,17 @@ function hasFilterMatch(source, target, filters) {
 }
 
 // Hide nodes and labels which don't belong to a visible filter
-function filterData(_filter) {
-  toggle(_filter);
-  let visibleFilters = _.filter(flatFilters, d => d.visible);
+function filterData() {
+  let activeFilters = _.filter(filters, function(d){
+    return d.selected;
+  });
+
   let visibleAccessions = [];
   d3.selectAll('.cell')
     .attr('opacity', d => {
       const source = getNodeByAccession(d.source);
       const target = getNodeByAccession(d.id);
-      const visible = hasFilterMatch(source, target, visibleFilters);
+      const visible = hasFilterMatch(source, target, activeFilters);
       if(visible) {
         visibleAccessions.push(source.accession);
         visibleAccessions.push(target.accession);
@@ -327,17 +329,12 @@ function filterData(_filter) {
     });
 }
 
-// Toggle the visible state of a given filter
-function toggle(_filter) {
-  // var match = _.find(flatFilters, d => _filter === d.name);
-  // match.visible = match.visible ? false : true;
-}
-
 function updateFilterSelection() {
   for(let filter of filters) {
     let item = d3.select(`#${getNameAsHTMLId(filter.name)}`);
     item.classed("active", filter.selected);
   }
+  filterData();
 }
 
 function getNameAsHTMLId(name) {
@@ -361,7 +358,6 @@ function clickTreeFilter(d) {
     node.selected = false;
   }
   updateFilterSelection();
-  // filterData(d.name);
 }
 
 // Add a filter to the interface
@@ -387,7 +383,6 @@ function createFilter(el, filtersToAdd) {
         });
       } else {
         for(let d of filter.items) {
-          d.selected = false;
           filters.push(d);
         }
 

@@ -44,6 +44,8 @@ const apiLoader = {
         for (let location of element.subcellularLocations) {
           for (let actualLocation of location.locations) {
             treeMenu.addStringItem(actualLocation.location.value, subcellulartreeMenu);
+            let locationSplit = actualLocation.location.value.split(', ');
+            element.filterTerms = element.filterTerms.concat(locationSplit);
           }
         }
       }
@@ -52,7 +54,7 @@ const apiLoader = {
           if (disease.diseaseId) {
             diseases[disease.diseaseId] = {
               name: disease.diseaseId,
-              checked: false
+              selected: false
             };
             element.filterTerms.push(disease.diseaseId);
           }
