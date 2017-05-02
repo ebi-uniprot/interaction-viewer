@@ -16,7 +16,6 @@ const apiLoader = {
     return promise;
   }, process: function(data) {
     // remove interactions which are not part of current set
-
     _.each(data, function(element) {
       let interactors = [];
       element.filterTerms = [];
@@ -31,11 +30,14 @@ const apiLoader = {
         }
         // TODO review this as it's not nice.
         // TODO also save the reverse??
-        else if (_.some(data, function(d) {
+        else if (_.some(data, function(d) {//Check that interactor is in the data
             return d.accession === interactor.id;
           })) {
           interactor.source = element.accession;
           interactors.push(interactor);
+        } else if (interactor.id.includes('-')) { //handle isoforms
+          // TODO handle isoforms
+          console.log(interactor.id);
         }
       });
       element.interactions = interactors;
