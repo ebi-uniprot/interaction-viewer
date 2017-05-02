@@ -59,6 +59,13 @@ interaction-viewer {
 
 .interaction-filter-container {
   text-align: left;
+  #filter-display {
+    margin: .7em 0;
+    .filter-selected {
+      margin: 0 .5em .5em .5em;
+      font-weight: bold;
+    }
+  }
   .interaction-filter {
     vertical-align: top;
     margin-bottom: .5em;

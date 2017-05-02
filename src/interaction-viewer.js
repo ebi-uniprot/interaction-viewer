@@ -336,10 +336,26 @@ function updateFilterSelection() {
     item.classed("active", filter.selected);
   }
   filterData();
+  updateSelectedFilterDisplay();
 }
 
 function getNameAsHTMLId(name) {
   return name.toLowerCase().replace(/\s|,/g, '_');
+}
+
+function updateSelectedFilterDisplay() {
+  let filterDisplay = d3.select('#filter-display')
+    .selectAll('span')
+    .data(_.where(filters, {selected: true}));
+
+  filterDisplay
+    .enter()
+    .append('span')
+    .attr("class", "filter-selected");
+
+  filterDisplay.text(d => d.name);
+
+  filterDisplay.exit().remove();
 }
 
 function clickFilter(d) {
@@ -361,7 +377,7 @@ function clickTreeFilter(d) {
   updateFilterSelection();
 }
 
-function toggleFilter() {
+function toggleFilterVisibility() {
   let id = `#${d3.select(this).attr('data-toggle')}`;
   let visibility = d3.select(id).style('visibility');
   d3.select('.dropdown-pane').style('visibility', 'hidden');
@@ -374,7 +390,8 @@ function createFilter(el, filtersToAdd) {
   const container = d3.select(el).append("div")
     .attr("class", "interaction-filter-container");
 
-  container.append("p").text('Show only interactions where one or both interactors have:');
+  container.append("div").text('Show only interactions where one or both interactors have:');
+  container.append("div").attr("id", "filter-display");
   for (let filter of filtersToAdd) {
     if (filter.items.length > 0) {
       var filterContainer = container.append("div").attr("class", "interaction-filter");
@@ -382,7 +399,7 @@ function createFilter(el, filtersToAdd) {
         .text(filter.label)
         .attr("class", "button dropdown")
         .attr("data-toggle", filter.name)
-        .on("click", toggleFilter);
+        .on("click", toggleFilterVisibility);
       if (filter.type === 'tree') {
         var ul = filterContainer
           .append("ul")

@@ -37,7 +37,7 @@ const apiLoader = {
           interactors.push(interactor);
         } else if (interactor.id.includes('-')) { //handle isoforms
           // TODO handle isoforms
-          console.log(interactor.id);
+          // console.log(interactor.id);
         }
       });
       element.interactions = interactors;
