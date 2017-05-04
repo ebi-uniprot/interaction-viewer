@@ -1,6 +1,6 @@
 # interaction-viewer
 http://ebi-uniprot.github.io/interaction-viewer/
-An adjacency graph visualisation of protein interaction data, which makes use of the UniProt SPARQL endpoint http://sparql.uniprot.org/
+An adjacency graph visualisation of protein interaction data.
 
 # Installing
 Once you have https://nodejs.org/ installed, run:
@@ -12,9 +12,9 @@ npm install
  - ```npm run watch``` whatches files for changes and automatically builds the application
  - ```npm run browsersync``` runs a local webserver to serve the application
 
-## Publishing the application to github pages
-```npm run deploy``` 
-builds the application and pushes it to http://ebi-uniprot.github.io/interaction-viewer/
+## Building the application
+```npm run build```
+builds the application into the `dist/` directory
 
 # Usage
 ```html
@@ -35,4 +35,7 @@ https://d3js.org/
 http://webcomponents.org/polyfills/
 
 # Contact
-For support contact xwatkins@ebi.ac.uk
+For support contact help@uniprot.org and please put interaction viewer in the subject line.
+
+# Licence
+Distributed under the Apache License 2.0
