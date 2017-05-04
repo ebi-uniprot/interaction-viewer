@@ -14,7 +14,7 @@
     "serve": "npm run watch & npm run browsersync",
     "deploy": "git push origin `git subtree split --prefix dist master`:gh-pages --force",
     "test-watch": "mocha -w",
-    "test": "mocha -w"
+    "test": "mocha"
   },
   "keywords": [
     "interaction",
