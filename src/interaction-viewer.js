@@ -23,17 +23,12 @@ module.exports.render = function({
   });
 };
 
-function formatDiseaseInfo(data) {
+function formatDiseaseInfo(data, acc) {
   if (data) {
     let formatedString = '';
     for (var disease of data) {
       if (disease.dbReference) { //Some have only text
-        formatedString += `<p><a href="//omim.org/entry/${disease.dbReference.id}" target="_blank">${disease.diseaseId}</a></p>`;
-      }
-      if (disease.text) {
-        for (var comment of disease.text) {
-          formatedString += `<p>${comment.value}</p>`;
-        }
+        formatedString += `<p><a href="//www.uniprot.org/uniprot/${acc}#${disease.acronym}" target="_blank">${disease.diseaseId}</a></p>`;
       }
     }
     return formatedString;
@@ -44,13 +39,16 @@ function formatDiseaseInfo(data) {
 
 function formatSubcellularLocationInfo(data) {
   if (data) {
-    let formatedString = '';
+    let formatedString = '<ul class="tree-list">';
+    let tree = [];
     for (var interactionType of data) {
       for (var location of interactionType.locations) {
-        formatedString += `<p>${location.location.value}</p>`;
+        treeMenu.addStringItem(location.location.value, tree);
+        // formatedString += `<p>${location.location.value}</p>`;
       }
     }
-    return formatedString;
+    treeMenu.traverseTree(tree, d => formatedString += `<li style="margin-left:${d.depth}em">${d.name}</li>`);
+    return `${formatedString}</ul>`;
   } else {
     return 'N/A';
   }
@@ -68,7 +66,7 @@ function draw(el, accession, data) {
     .style("opacity", 0);
   tooltip.append('span')
     .attr('class', 'close-interaction-tooltip')
-    .text('Close X')
+    .text('Close ✖')
     .on('click', closeTooltip);
   tooltip.append('div')
     .attr('class', 'tooltip-content');
@@ -76,6 +74,8 @@ function draw(el, accession, data) {
   d3.select(el).append("p")
     .attr("class", "interaction-title")
     .text(`${accession} has binary interactions with ${nodes.length-1} proteins`);
+
+  createFilter(el, apiLoader.getFilters());
 
   const margin = {
       top: 100,
@@ -152,8 +152,6 @@ function draw(el, accession, data) {
     .attr("points", points)
     .attr("class", "hidden-side")
     .attr("transform", d => `translate(${x(nodes[1].accession)}, 0)`);
-
-  createFilter(el, apiLoader.getFilters());
 
   function processRow(row) {
     if (!row.interactions) {
@@ -255,8 +253,8 @@ function draw(el, accession, data) {
 
     var diseaseRow = table.append('tr');
     diseaseRow.append('td').text('Pathology').attr('class', 'interaction-viewer-table_row-header');
-    diseaseRow.append('td').html(formatDiseaseInfo(source.diseases));
-    diseaseRow.append('td').html(formatDiseaseInfo(target.diseases));
+    diseaseRow.append('td').html(formatDiseaseInfo(source.diseases, source.accession));
+    diseaseRow.append('td').html(formatDiseaseInfo(target.diseases, target.accession));
 
     var subcellRow = table.append('tr');
     subcellRow.append('td').text('Subcellular location').attr('class', 'interaction-viewer-table_row-header');
@@ -324,7 +322,7 @@ function filterData() {
       }
       return visible ? 1 : 0.1;
     });
-  d3.selectAll('text')
+  d3.selectAll('.interaction-viewer text')
     .attr('fill-opacity', d => {
       return (_.contains(visibleAccessions, d.accession)) ? 1 : 0.1;
     });
@@ -340,7 +338,12 @@ function updateFilterSelection() {
 }
 
 function getNameAsHTMLId(name) {
-  return name.toLowerCase().replace(/\s|,/g, '_');
+  return name.toLowerCase().replace(/\s|,|^\d/g, '_');
+}
+
+function removeFilter(d) {
+  d.selected = false;
+  updateFilterSelection();
 }
 
 function updateSelectedFilterDisplay() {
@@ -351,7 +354,8 @@ function updateSelectedFilterDisplay() {
   filterDisplay
     .enter()
     .append('span')
-    .attr("class", "filter-selected");
+    .attr("class", "filter-selected")
+    .on('click',removeFilter);
 
   filterDisplay.text(d => d.name);
 
@@ -359,16 +363,16 @@ function updateSelectedFilterDisplay() {
 }
 
 function clickFilter(d) {
+  d3.selectAll('.dropdown-pane').style('visibility', 'hidden');
   d.selected = !d.selected;
   updateFilterSelection();
 }
 
 function clickTreeFilter(d) {
+  d3.selectAll('.dropdown-pane').style('visibility', 'hidden');
   d.selected = !d.selected;
-
   //De-select any descendants
   treeMenu.traverseTree(d.children, node => node.selected = false);
-
   //De-select any parent
   let path = treeMenu.getPath(d, []);
   for (let node of path) {
@@ -390,20 +394,19 @@ function createFilter(el, filtersToAdd) {
   const container = d3.select(el).append("div")
     .attr("class", "interaction-filter-container");
 
-  container.append("div").text('Show only interactions where one or both interactors have:');
-  container.append("div").attr("id", "filter-display");
+  // container.append("div").text('Show only interactions where one or both interactors have:');
   for (let filter of filtersToAdd) {
     if (filter.items.length > 0) {
       var filterContainer = container.append("div").attr("class", "interaction-filter");
       filterContainer.append("a")
         .text(filter.label)
         .attr("class", "button dropdown")
-        .attr("data-toggle", filter.name)
+        .attr("data-toggle", `iv_${filter.name}`)
         .on("click", toggleFilterVisibility);
       if (filter.type === 'tree') {
         var ul = filterContainer
           .append("ul")
-          .attr("id", filter.name)
+          .attr("id", `iv_${filter.name}`)
           .attr("class", "dropdown-pane");
         treeMenu.traverseTree(filter.items, function(d) {
           filters.push(d);
@@ -420,7 +423,7 @@ function createFilter(el, filtersToAdd) {
         }
 
         filterContainer.append("ul")
-          .attr("id", filter.name)
+          .attr("id", `iv_${filter.name}`)
           .attr("class", "dropdown-pane")
           .selectAll('li')
           .data(filter.items)
@@ -432,6 +435,7 @@ function createFilter(el, filtersToAdd) {
       }
     }
   }
+  container.append("div").attr("id", "filter-display");
 }
 
 function required(name) {

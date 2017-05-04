@@ -1,6 +1,7 @@
 $font: 'Open Sans', sans-serif;
 $font-size: 12px;
 $primary-color: #4A90E2;
+$colour-black:#3a343a;
 $white: #FFFFFF;
 $grey: #979797;
 $darkgrey: #333333;
@@ -45,7 +46,7 @@ interaction-viewer {
     -webkit-transition: all 0.5s;
     /* Safari */
     transition: all 0.25s;
-
+    min-width: 36em;
     .close-interaction-tooltip {
       cursor: pointer;
       float: right;
@@ -60,10 +61,18 @@ interaction-viewer {
 .interaction-filter-container {
   text-align: left;
   #filter-display {
-    margin: .7em 0;
     .filter-selected {
-      margin: 0 .5em .5em .5em;
-      font-weight: bold;
+      margin: .2em .5em;
+      padding: .3em .1em;
+      background-color: $verylightgrey;
+      border: 1px solid $lightgrey;
+      cursor: pointer;
+      white-space: nowrap;
+      display: inline-block;
+      &::after {
+        content: '✖';
+        margin: 0 .3em;
+      }
     }
   }
   .interaction-filter {
@@ -149,12 +158,15 @@ interaction-viewer {
     border-radius: 0;
     -webkit-transition: background-color 0.25s ease-out, color 0.25s ease-out;
     transition: background-color 0.25s ease-out, color 0.25s ease-out;
-    font-size: 0.9rem;
     line-height: 1;
     text-align: center;
     cursor: pointer;
-    background-color: #1779ba;
-    color: #fefefe;
+    background-color: $verylightgrey !important;
+    color: $colour-black;
+    border: 1px solid $lightgrey;
+    &:hover {
+      color: $colour-black;
+    }
   }
 
   .button.dropdown::after {
@@ -165,7 +177,7 @@ interaction-viewer {
     content: '';
     border-bottom-width: 0;
     border-top-style: solid;
-    border-color: #fefefe transparent transparent;
+    border-color: $colour-black transparent transparent;
     position: relative;
     top: 0.4em;
     display: inline-block;
@@ -183,7 +195,14 @@ interaction-viewer {
     border: 1px solid #cacaca;
     border-radius: 0;
     background-color: #fefefe;
-    font-size: 1rem;
+  }
+
+  .tree-list {
+    text-align: left;
+    list-style: none;
+    li {
+      margin: .5em 0;
+    }
   }
 
 }

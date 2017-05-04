@@ -1,3 +1,4 @@
+@charset "UTF-8";
 interaction-viewer {
   position: relative; }
   interaction-viewer .interaction-spinner {
@@ -24,7 +25,8 @@ interaction-viewer {
     box-shadow: 2px 2px 2px #333333;
     -webkit-transition: all 0.5s;
     /* Safari */
-    transition: all 0.25s; }
+    transition: all 0.25s;
+    min-width: 36em; }
     interaction-viewer .interaction-tooltip .close-interaction-tooltip {
       cursor: pointer;
       float: right;
@@ -33,11 +35,17 @@ interaction-viewer {
       clear: both; }
   interaction-viewer .interaction-filter-container {
     text-align: left; }
-    interaction-viewer .interaction-filter-container #filter-display {
-      margin: .7em 0; }
-      interaction-viewer .interaction-filter-container #filter-display .filter-selected {
-        margin: 0 .5em .5em .5em;
-        font-weight: bold; }
+    interaction-viewer .interaction-filter-container #filter-display .filter-selected {
+      margin: .2em .5em;
+      padding: .3em .1em;
+      background-color: #F2F2F2;
+      border: 1px solid #E8E8E8;
+      cursor: pointer;
+      white-space: nowrap;
+      display: inline-block; }
+      interaction-viewer .interaction-filter-container #filter-display .filter-selected::after {
+        content: '✖';
+        margin: 0 .3em; }
     interaction-viewer .interaction-filter-container .interaction-filter {
       vertical-align: top;
       margin-bottom: .5em;
@@ -95,12 +103,14 @@ interaction-viewer {
     border-radius: 0;
     -webkit-transition: background-color 0.25s ease-out, color 0.25s ease-out;
     transition: background-color 0.25s ease-out, color 0.25s ease-out;
-    font-size: 0.9rem;
     line-height: 1;
     text-align: center;
     cursor: pointer;
-    background-color: #1779ba;
-    color: #fefefe; }
+    background-color: #F2F2F2 !important;
+    color: #3a343a;
+    border: 1px solid #E8E8E8; }
+    interaction-viewer .button:hover {
+      color: #3a343a; }
   interaction-viewer .button.dropdown::after {
     display: block;
     width: 0;
@@ -109,7 +119,7 @@ interaction-viewer {
     content: '';
     border-bottom-width: 0;
     border-top-style: solid;
-    border-color: #fefefe transparent transparent;
+    border-color: #3a343a transparent transparent;
     position: relative;
     top: 0.4em;
     display: inline-block;
@@ -124,6 +134,10 @@ interaction-viewer {
     visibility: hidden;
     border: 1px solid #cacaca;
     border-radius: 0;
-    background-color: #fefefe;
-    font-size: 1rem; }
+    background-color: #fefefe; }
+  interaction-viewer .tree-list {
+    text-align: left;
+    list-style: none; }
+    interaction-viewer .tree-list li {
+      margin: .5em 0; }
 
