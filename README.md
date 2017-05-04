@@ -37,5 +37,5 @@ http://webcomponents.org/polyfills/
 # Contact
 For support contact help@uniprot.org and please put interaction viewer in the subject line.
 
-# Licence
+# License
 Distributed under the Apache License 2.0

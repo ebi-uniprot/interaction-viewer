@@ -23,7 +23,7 @@
     "uniprot",
     "ebi"
   ],
-  "author": "Xavier Watkins <xavier.watkins@gmail.com>",
+  "author": "Xavier Watkins <xwatkins@ebi.ac.uk>",
   "license": "Apache-2.0",
   "devDependencies": {
     "babel-cli": "^6.8.0",
