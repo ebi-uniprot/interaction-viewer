@@ -225,7 +225,10 @@ function draw(el, accession, data) {
     let target = _.find(nodes, d => d.accession === data.id);
 
     element.append('h3').text('Interaction');
-    element.append('p').text(`Confirmed by ${data.experiments} experiment(s)`);
+    element.append('p').append('a')
+    .attr('href', getIntactLink(data.interactor1, data.interactor2))
+    .attr('target', '_blank')
+    .text(`Confirmed by ${data.experiments} experiment(s)`);
 
     var table = element.append('table').attr('class', 'interaction-viewer-table');
     var headerRow = table.append('tr');
