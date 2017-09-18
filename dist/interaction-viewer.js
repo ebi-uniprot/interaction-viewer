@@ -6477,7 +6477,7 @@ function hasFilterMatch(source, target, filters) {
 
 // Hide nodes and labels which don't belong to a visible filter
 function filterData() {
-    var activeFilters = filter.filter(function (d) {
+    var activeFilters = filters.filter(function (d) {
         return d.selected;
     });
 
@@ -6504,11 +6504,11 @@ function updateFilterSelection() {
 
     try {
         for (var _iterator4 = filters[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
-            var _filter = _step4.value;
+            var filter = _step4.value;
 
-            console.log(_filter);
-            var item = select('#' + getNameAsHTMLId(_filter.name));
-            item.classed("active", _filter.selected);
+            console.log(filter);
+            var item = select('#' + getNameAsHTMLId(filter.name));
+            item.classed("active", filter.selected);
         }
     } catch (err) {
         _didIteratorError4 = true;

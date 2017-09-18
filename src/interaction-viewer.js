@@ -311,7 +311,7 @@ function hasFilterMatch(source, target, filters) {
 
 // Hide nodes and labels which don't belong to a visible filter
 function filterData() {
-    let activeFilters = filter.filter(d => d.selected);
+    let activeFilters = filters.filter(d => d.selected);
 
     let visibleAccessions = [];
     d3.selectAll('.cell')
