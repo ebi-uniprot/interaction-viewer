@@ -1,1 +1,13 @@
-{ "presets": ["es2015-nostrict"] }
+{
+    "presets": [
+        [
+            "es2015",
+            {
+                "modules": false
+            }
+        ]
+    ],
+    "plugins": [
+        "external-helpers"
+    ]
+}
