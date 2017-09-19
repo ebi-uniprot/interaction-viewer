@@ -358,9 +358,9 @@ function updateSelectedFilterDisplay() {
         .enter()
         .append('span')
         .attr("class", "filter-selected")
+        .merge(filterDisplay)
+        .text(d => d.name)
         .on('click', removeFilter);
-
-    filterDisplay.text(d => d.name);
 
     filterDisplay.exit().remove();
 }

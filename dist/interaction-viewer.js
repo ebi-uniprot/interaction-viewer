@@ -2849,6 +2849,8 @@ function type(t) {
   return {type: t};
 }
 
+// Ignore right-click, since that should open the context menu.
+
 var prefix = "$";
 
 function Map() {}
@@ -3581,7 +3583,6 @@ var formatTypes = {
   "x": function(x) { return Math.round(x).toString(16); }
 };
 
-// [[fill]align][sign][symbol][0][width][,][.precision][type]
 var re = /^(?:(.)?([<>=^]))?([+\-\( ])?([$#])?(0)?(\d+)?(,)?(\.\d+)?([a-z%])?$/i;
 
 function formatSpecifier(specifier) {
@@ -3876,10 +3877,7 @@ var areaSum = adder();
 
 var deltaSum = adder();
 
-// Generates a circle centered at [0°, 0°], with a given radius and precision.
-
-// TODO Use d3-polygon’s polygonContains here for the ring check?
-// TODO Eliminate duplicate buffering in clipBuffer and polygon.push?
+// Returns the signed angle of a cartesian point relative to [cosRadius, 0, 0].
 
 var sum$1 = adder();
 
@@ -5455,6 +5453,8 @@ ReflectContext.prototype = {
   bezierCurveTo: function(x1, y1, x2, y2, x, y) { this._context.bezierCurveTo(y1, x1, y2, x2, y, x); }
 };
 
+// Liang–Barsky line clipping.
+
 // `_isObject` : an object's function
 // -----------------------------------
 
@@ -5489,8 +5489,6 @@ const nativeKeys = Object.keys;
 // `_has` : an object's function
 // ------------------------------
 
-// Shortcut function for checking if an object has a given property directly
-// on itself (in other words, not on a prototype).
 var _has = function (obj, key) {
 	return obj != null && hasOwnProperty.call(obj, key);
 };
@@ -5498,8 +5496,6 @@ var _has = function (obj, key) {
 // `_keys` : an object's function
 // -------------------------------
 
-// Retrieve the names of an object's own properties.
-// Delegates to **ECMAScript 5**'s native `Object.keys`.
 var _keys = function (obj) {
 	if (!_isObject(obj)) return [];
 	if (nativeKeys) return nativeKeys(obj);
@@ -5522,14 +5518,9 @@ var _keys = function (obj) {
 // `_isArray` : an object's function
 // ----------------------------------
 
-// Is a given value an array?
-// Delegates to ECMA5's native Array.isArray
-
 // `_isFunction` : an object's function
 // -------------------------------------
 
-// Optimize `isFunction` if appropriate. Work around some typeof bugs in old v8,
-// IE 11 (#1621), Safari 8 (#1929), and PhantomJS (#2236).
 function customFunction() {
 	if (typeof /./ != 'function' && typeof Int8Array != 'object' && typeof document !== 'undefined' && typeof document.childNodes != 'function') {
 		return (obj) => typeof obj == 'function' || false;
@@ -5545,8 +5536,6 @@ var _isFunction = customFunction() || function (obj) {
 // `_isArguments` : an object's function
 // --------------------------------------
 
-// Define a fallback version of the method in browsers (ahem, IE < 9), where
-// there isn't any inspectable "Arguments" type.
 function customArguments () {
 	if (toString.call(arguments) === '[object Arguments]') return null;
 	return (obj) => _has(obj, 'callee');
@@ -5560,7 +5549,6 @@ var _isArguments = customArguments() || function (obj) {
 // `_isNumber` : an object's function
 // -----------------------------------
 
-// Is a given value a number?
 var _isNumber = function (obj) {
 	return toString.call(obj) === '[object Number]';
 };
@@ -5568,7 +5556,6 @@ var _isNumber = function (obj) {
 // `_isNaN` : an object's function
 // --------------------------------
 
-// Is the given value `NaN`?
 var _isNaN = function (obj) {
 	return _isNumber(obj) && isNaN(obj);
 };
@@ -5576,7 +5563,6 @@ var _isNaN = function (obj) {
 // `_invert` : an object's function
 // ---------------------------------
 
-// Invert the keys and values of an object. The values must be serializable.
 var _invert = function (obj) {
 	let result = {};
 	let keys = _keys(obj);
@@ -5589,9 +5575,6 @@ var _invert = function (obj) {
 // `_iteratee` : an utility's function
 // ------------------------------------
 
-// External wrapper for our callback generator. Users may customize
-// `_.iteratee` if they want additional predicate/iteratee shorthand styles.
-// This abstraction hides the internal-only argCount argument.
 var _iteratee = builtinIteratee;
 
 // `_identity` : an utility's function
@@ -5605,13 +5588,11 @@ var _identity = function (value) {
 // `_extendOwn` : an object's function
 // ------------------------------------
 
-// Extend a given object with the properties in passed-in object(s).
 var _extendOwn = createAssigner(_keys);
 
 // `_isMatch` : an object's function
 // ----------------------------------
 
-// Returns whether an object has a given set of `key:value` pairs.
 var _isMatch = function (object, attrs) {
 	let keys = _keys(attrs),
 		length = keys.length;
@@ -5627,8 +5608,6 @@ var _isMatch = function (object, attrs) {
 // `_matches` : an utility's function
 // -----------------------------------
 
-// Returns a predicate for checking whether an object has a given set of
-// `key:value` pairs.
 var _matcher = function (attrs) {
 	attrs = _extendOwn({}, attrs);
 	return (obj) => _isMatch(obj, attrs);
@@ -5648,9 +5627,6 @@ var _matcher = function (attrs) {
 // Internal functions
 //--------------------
 
-// Internal function that returns an efficient (for current engines) version
-// of the passed-in callback, to be repeatedly applied in other Underscore
-// functions.
 function optimizeCb (func, context, argCount) {
 	if (context === void 0) return func;
 	switch (argCount == null ? 3 : argCount) {
@@ -5841,14 +5817,11 @@ var unescapeMap = _invert(escapeMap);
 // `_findIndex` : an array's function
 // -----------------------------------
 
-// Returns the first index on an array-like that passes a predicate test.
 var _findIndex = createPredicateIndexFinder(1);
 
 // `_sortedIndex` : an array's function
 // -------------------------------------
 
-// Use a comparator function to figure out the smallest index at which
-// an object should be inserted so as to maintain order. Uses binary search.
 var _sortedIndex = function (array, obj, iteratee, context) {
 	iteratee = cb(iteratee, context, 1);
 	let value = iteratee(obj);
@@ -5865,16 +5838,11 @@ var _sortedIndex = function (array, obj, iteratee, context) {
 // `_indexOf` : an array's function
 // ---------------------------------
 
-// Return the position of the first occurrence of an item in an array,
-// or -1 if the item is not included in the array.
-// If the array is large and already in sort order, pass `true`
-// for **isSorted** to use binary search.
 var _indexOf = createIndexFinder(1, _findIndex, _sortedIndex);
 
 // `_values` : an object's function
 // ---------------------------------
 
-// Retrieve the values of an object's properties.
 var _values = function (obj) {
 	let keys = _keys(obj);
 	let length = keys.length;
@@ -5888,7 +5856,6 @@ var _values = function (obj) {
 // `_include` : a collection's function
 // -------------------------------------
 
-// Determine if the array or object contains a given item (using `===`).
 var _contains = function (obj, item, fromIndex, guard) {
 	if (!isArrayLike(obj)) obj = _values(obj);
 	if (typeof fromIndex != 'number' || guard) fromIndex = 0;
@@ -5903,8 +5870,6 @@ var _contains = function (obj, item, fromIndex, guard) {
 // `_intersection` : an array's function
 // --------------------------------------
 
-// Produce an array that contains every item shared between all the
-// passed-in arrays.
 var _intersection = function (array) {
 	let result = [];
 	let argsLength = arguments.length;
@@ -6577,11 +6542,9 @@ function updateSelectedFilterDisplay() {
         return d.selected === true;
     }));
 
-    filterDisplay.enter().append('span').attr("class", "filter-selected").on('click', removeFilter);
-
-    filterDisplay.text(function (d) {
+    filterDisplay.enter().append('span').attr("class", "filter-selected").merge(filterDisplay).text(function (d) {
         return d.name;
-    });
+    }).on('click', removeFilter);
 
     filterDisplay.exit().remove();
 }
