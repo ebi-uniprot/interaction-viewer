@@ -327,13 +327,12 @@ function filterData() {
         });
     d3.selectAll('.interaction-viewer text')
         .attr('fill-opacity', d => {
-            return (_contains(visibleAccessions, d.accession)) ? 1 : 0.1;
+            return (visibleAccessions.includes(d.accession)) ? 1 : 0.1;
         });
 }
 
 function updateFilterSelection() {
     for (let filter of filters) {
-        console.log(filter);
         let item = d3.select(`#${getNameAsHTMLId(filter.name)}`);
         item.classed("active", filter.selected);
     }
@@ -353,7 +352,7 @@ function removeFilter(d) {
 function updateSelectedFilterDisplay() {
     let filterDisplay = d3.select('#filter-display')
         .selectAll('span')
-        .data(_where(filters, { selected: true }));
+        .data(filters.filter(d => d.selected === true));
 
     filterDisplay
         .enter()
