@@ -9,7 +9,7 @@ An adjacency graph visualisation of protein interaction data.
 ```
 
 ## API
-*accession*: changing the accession will cause the component to fetch the data for the given entry
+ - `accession` changing the accession will cause the component to fetch the data for the given entry
 
 ## Dependencies
 This component uses Custom elements V1 (https://www.webcomponents.org/polyfills/), which requires the use of a polyfill in certain browsers.
