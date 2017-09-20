@@ -1,4 +1,3 @@
-import * as d3 from 'd3';
 import _values from 'underscore-es/values';
 import { addStringItem } from './treeMenu';
 
@@ -6,13 +5,9 @@ const subcellulartreeMenu = [];
 const diseases = {};
 
 function load(accession) {
-    var promise = new Promise(function(resolve) {
-        return d3.json(`//www.ebi.ac.uk/proteins/api/proteins/interaction/${accession}.json`, function(json) {
-            var data = process(json);
-            resolve(data);
-        });
-    });
-    return promise;
+    return fetch(`//www.ebi.ac.uk/proteins/api/proteins/interaction/${accession}.json`)
+        .then(resp => resp.json()
+            .then(json => process(json)));
 }
 
 function process(data) {

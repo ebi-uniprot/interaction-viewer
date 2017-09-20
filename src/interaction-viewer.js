@@ -1,4 +1,5 @@
-import * as d3 from 'd3';
+import { select, selectAll, mouse } from 'd3-selection';
+import { scaleBand, scaleLinear } from 'd3-scale';
 import _intersection from 'underscore-es/intersection';
 import { load, getFilters } from './apiLoader';
 import { addStringItem, traverseTree, getPath } from './treeMenu';
@@ -13,12 +14,12 @@ function render({
     accession = 'P05067'
 }) {
     // clear all previous vis
-    d3.select(el).select('.interaction-title').remove();
-    d3.select(el).select('svg').remove();
-    d3.select(el).select('.interaction-tooltip').remove();
+    select(el).select('.interaction-title').remove();
+    select(el).select('svg').remove();
+    select(el).select('.interaction-tooltip').remove();
 
     // show spinner until data is loaded
-    d3.select(el).append('div').attr('class', 'loader');
+    select(el).append('div').attr('class', 'loader');
 
     load(accession).then(data => {
         draw(el, accession, data);
@@ -58,11 +59,11 @@ function formatSubcellularLocationInfo(data) {
 
 function draw(el, accession, data) {
 
-    d3.select(el).select('.loader').remove();
+    select(el).select('.loader').remove();
 
     nodes = data;
 
-    var tooltip = d3.select(el).append("div")
+    var tooltip = select(el).append("div")
         .attr("class", "interaction-tooltip")
         .attr("display", "none")
         .style("opacity", 0);
@@ -73,7 +74,7 @@ function draw(el, accession, data) {
     tooltip.append('div')
         .attr('class', 'tooltip-content');
 
-    d3.select(el).append("p")
+    select(el).append("p")
         .attr("class", "interaction-title")
         .text(`${accession} has binary interactions with ${nodes.length-1} proteins`);
 
@@ -89,10 +90,10 @@ function draw(el, accession, data) {
 
     const height = width;
 
-    const x = d3.scaleBand().rangeRound([0, width]),
-        intensity = d3.scaleLinear().range([0.2, 1]);
+    const x = scaleBand().rangeRound([0, width]),
+        intensity = scaleLinear().range([0.2, 1]);
 
-    const svg = d3.select(el).append("svg")
+    const svg = select(el).append("svg")
         .attr("width", width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom)
         .attr("class", "interaction-viewer")
@@ -163,7 +164,7 @@ function draw(el, accession, data) {
         }
 
 
-        var cell = d3.select(this).selectAll(".cell")
+        var cell = select(this).selectAll(".cell")
             .data(row.interactions);
 
         var circle = cell.enter().append("circle");
@@ -187,39 +188,35 @@ function draw(el, accession, data) {
     }
 
     function mouseover(p) {
-        d3.select(this).classed("active-cell", true);
-        d3.selectAll(".interaction-row").classed("active", d => d.accession === p.id);
-        // d3.selectAll(".column").classed("active", d => d.accession === p.id);
+        select(this).classed("active-cell", true);
+        selectAll(".interaction-row").classed("active", d => d.accession === p.id);
+        // selectAll(".column").classed("active", d => d.accession === p.id);
 
-        d3.selectAll('.interaction-viewer-group')
+        selectAll('.interaction-viewer-group')
             .append('line')
             .attr('class', 'active-row')
             .attr('style', 'opacity:0')
             .attr('x1', 0)
             .attr('y1', x(p.source) + x.bandwidth() / 2)
             .attr('x2', x(p.id))
-            .attr('y2', x(p.source) + x.bandwidth() / 2)
-            .transition(50)
-            .attr('style', 'opacity:.5');
+            .attr('y2', x(p.source) + x.bandwidth() / 2);
 
-        d3.selectAll('.interaction-viewer-group')
+        selectAll('.interaction-viewer-group')
             .append('line')
             .attr('class', 'active-row')
             .attr('style', 'opacity:0')
             .attr('x1', x(p.id) + x.bandwidth() / 2)
             .attr('y1', 0)
             .attr('x2', x(p.id) + x.bandwidth() / 2)
-            .attr('y2', x(p.source))
-            .transition(50)
-            .attr('style', 'opacity:.5');
+            .attr('y2', x(p.source));
     }
 
     function mouseclick(p) {
-        populateTooltip(d3.selectAll('.tooltip-content'), p);
+        populateTooltip(selectAll('.tooltip-content'), p);
         tooltip.style("opacity", 0.9)
             .style("display", "inline")
-            .style("left", (d3.mouse(el)[0] + 10) + "px")
-            .style("top", (d3.mouse(el)[1] - 15) + "px");
+            .style("left", (mouse(el)[0] + 10) + "px")
+            .style("top", (mouse(el)[1] - 15) + "px");
     }
 
     function populateTooltip(element, data) {
@@ -283,13 +280,13 @@ function draw(el, accession, data) {
     }
 
     function mouseout() {
-        d3.selectAll("g").classed("active", false);
-        d3.selectAll("circle").classed("active-cell", false);
-        d3.selectAll(".active-row").remove();
+        selectAll("g").classed("active", false);
+        selectAll("circle").classed("active-cell", false);
+        selectAll(".active-row").remove();
     }
 
     function closeTooltip() {
-        d3.selectAll('.interaction-tooltip')
+        selectAll('.interaction-tooltip')
             .style("opacity", 0)
             .style("display", "none");
     }
@@ -314,7 +311,7 @@ function filterData() {
     let activeFilters = filters.filter(d => d.selected);
 
     let visibleAccessions = [];
-    d3.selectAll('.cell')
+    selectAll('.cell')
         .attr('opacity', d => {
             const source = getNodeByAccession(d.source);
             const target = getNodeByAccession(d.id);
@@ -325,7 +322,7 @@ function filterData() {
             }
             return visible ? 1 : 0.1;
         });
-    d3.selectAll('.interaction-viewer text')
+    selectAll('.interaction-viewer text')
         .attr('fill-opacity', d => {
             return (visibleAccessions.includes(d.accession)) ? 1 : 0.1;
         });
@@ -333,7 +330,7 @@ function filterData() {
 
 function updateFilterSelection() {
     for (let filter of filters) {
-        let item = d3.select(`#${getNameAsHTMLId(filter.name)}`);
+        let item = select(`#${getNameAsHTMLId(filter.name)}`);
         item.classed("active", filter.selected);
     }
     filterData();
@@ -350,7 +347,7 @@ function removeFilter(d) {
 }
 
 function updateSelectedFilterDisplay() {
-    let filterDisplay = d3.select('#filter-display')
+    let filterDisplay = select('#filter-display')
         .selectAll('span')
         .data(filters.filter(d => d.selected === true));
 
@@ -366,13 +363,13 @@ function updateSelectedFilterDisplay() {
 }
 
 function clickFilter(d) {
-    d3.selectAll('.dropdown-pane').style('visibility', 'hidden');
+    selectAll('.dropdown-pane').style('visibility', 'hidden');
     d.selected = !d.selected;
     updateFilterSelection();
 }
 
 function clickTreeFilter(d) {
-    d3.selectAll('.dropdown-pane').style('visibility', 'hidden');
+    selectAll('.dropdown-pane').style('visibility', 'hidden');
     d.selected = !d.selected;
     //De-select any descendants
     traverseTree(d.children, node => node.selected = false);
@@ -385,16 +382,16 @@ function clickTreeFilter(d) {
 }
 
 function toggleFilterVisibility() {
-    let id = `#${d3.select(this).attr('data-toggle')}`;
-    let visibility = d3.select(id).style('visibility');
-    d3.select('.dropdown-pane').style('visibility', 'hidden');
-    d3.select(id).style('visibility', visibility === 'hidden' ? 'visible' : 'hidden');
+    let id = `#${select(this).attr('data-toggle')}`;
+    let visibility = select(id).style('visibility');
+    select('.dropdown-pane').style('visibility', 'hidden');
+    select(id).style('visibility', visibility === 'hidden' ? 'visible' : 'hidden');
 }
 
 // Add a filter to the interface
 function createFilter(el, filtersToAdd) {
-    d3.select(el).selectAll(".interaction-filter-container").remove();
-    const container = d3.select(el).append("div")
+    select(el).selectAll(".interaction-filter-container").remove();
+    const container = select(el).append("div")
         .attr("class", "interaction-filter-container");
 
     // container.append("div").text('Show only interactions where one or both interactors have:');
