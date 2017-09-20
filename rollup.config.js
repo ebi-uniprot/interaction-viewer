@@ -26,7 +26,7 @@ export default {
             jsnext: true
         }),
         babel({
-            presets: ['es2015-rollup'],
+            presets: ['es2016'],
             babelrc: false,
             exclude: 'node_modules/**'
         }),

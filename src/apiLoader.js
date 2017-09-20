@@ -7,7 +7,7 @@ const diseases = {};
 
 function load(accession) {
     var promise = new Promise(function(resolve) {
-        return d3.json(`http://www.ebi.ac.uk/proteins/api/proteins/interaction/${accession}.json`, function(json) {
+        return d3.json(`//www.ebi.ac.uk/proteins/api/proteins/interaction/${accession}.json`, function(json) {
             var data = process(json);
             resolve(data);
         });

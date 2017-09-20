@@ -3,11 +3,12 @@ import { render } from './interaction-viewer';
 var loadComponent = function() {
     class InteractionViewer extends HTMLElement {
 
-        createdCallback() {
+        constructor() {
+            super();
             this._accession = this.getAttribute('accession');
         }
 
-        attachedCallback() {
+        connectedCallback() {
             this._render();
         }
 
@@ -33,21 +34,15 @@ var loadComponent = function() {
             });
         }
     }
-
-    document.registerElement('interaction-viewer', InteractionViewer);
+    customElements.define('interaction-viewer', InteractionViewer);
 }
 
 // Conditional loading of polyfill
-if ('registerElement' in document &&
-    'import' in document.createElement('link') &&
-    'content' in document.createElement('template')) {
+if (window.customElements) {
     loadComponent();
 } else {
-    // polyfill the platform!
-    var e = document.createElement('script');
-    e.src = 'http://ebi-uniprot.github.io/interaction-viewer/micro.js';
-    document.body.appendChild(e);
     document.addEventListener('WebComponentsReady', function() {
+        console.log('Loaded with polyfill.')
         loadComponent();
     });
 }
