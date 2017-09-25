@@ -1,4 +1,3 @@
-import _values from 'underscore-es/values';
 import { addStringItem } from './treeMenu';
 
 const subcellulartreeMenu = [];
@@ -12,7 +11,7 @@ function load(accession) {
 
 function process(data) {
     // remove interactions which are not part of current set
-    for (const element of data) {
+    for (let element of data) {
         let interactors = [];
         element.filterTerms = [];
 
@@ -62,6 +61,14 @@ function process(data) {
     return data;
 }
 
+function values(obj) {
+    let ret = [];
+    for (let [k, v] of Object.entries(obj)) {
+        ret.push(v);
+    }
+    return ret;
+}
+
 function getFilters() {
     return [{
         name: 'subcellularLocations',
@@ -71,7 +78,7 @@ function getFilters() {
     }, {
         name: 'diseases',
         label: 'Diseases',
-        items: _values(diseases)
+        items: values(diseases)
     }];
 }
 

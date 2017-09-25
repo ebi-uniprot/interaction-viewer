@@ -1,6 +1,6 @@
 import { select, selectAll, mouse } from 'd3-selection';
 import { scaleBand, scaleLinear } from 'd3-scale';
-import _intersection from 'underscore-es/intersection';
+import _intersection from 'lodash-es/intersection';
 import { load, getFilters } from './apiLoader';
 import { addStringItem, traverseTree, getPath } from './treeMenu';
 import '../styles/main.css';
@@ -21,6 +21,7 @@ function render({
     // show spinner until data is loaded
     select(el).append('div').attr('class', 'loader');
 
+    const test = ['one', 'two', 'three'];
     load(accession).then(data => {
         draw(el, accession, data);
     });

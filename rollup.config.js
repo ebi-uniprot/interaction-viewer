@@ -26,8 +26,6 @@ export default {
             jsnext: true
         }),
         babel({
-            presets: ['es2016'],
-            babelrc: false,
             exclude: 'node_modules/**'
         }),
         conditional(isProduction, [
