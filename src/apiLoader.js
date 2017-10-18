@@ -4,7 +4,7 @@ const subcellulartreeMenu = [];
 const diseases = {};
 
 function load(accession) {
-    return fetch(`//www.ebi.ac.uk/proteins/api/proteins/interaction/${accession}.json`)
+    return fetch(`https://www.ebi.ac.uk/proteins/api/proteins/interaction/${accession}.json`)
         .then(resp => resp.json()
             .then(json => process(json)));
 }
