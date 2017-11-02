@@ -1,12 +1,10 @@
-import { addStringItem } from './treeMenu';
+import {addStringItem} from './treeMenu';
 
 const subcellulartreeMenu = [];
 const diseases = {};
 
 function load(accession) {
-    return fetch(`https://www.ebi.ac.uk/proteins/api/proteins/interaction/${accession}.json`)
-        .then(resp => resp.json()
-            .then(json => process(json)));
+    return fetch(`https://www.ebi.ac.uk/proteins/api/proteins/interaction/${accession}.json`).then(resp => resp.json().then(json => process(json)));
 }
 
 function process(data) {
@@ -14,25 +12,25 @@ function process(data) {
     for (let element of data) {
         let interactors = [];
         element.filterTerms = [];
-
+        // we need this until production fixes data as it's not symetrical
+        if (!element.interactions) {
+            continue;
+        }
         // Add source  to the nodes
         for (const interactor of element.interactions) {
             // Add interaction for SELF
             if (interactor.interactionType === 'SELF') {
                 interactor.source = element.accession;
                 interactor.id = element.accession;
-                interactors.push(interactor);
-            }
-            // TODO review this as it's not nice.
-            // TODO also save the reverse??
-            else if (data.some(function(d) { //Check that interactor is in the data
-                    return d.accession === interactor.id;
-                })) {
+                interactors.push(interactor) // TODO review this as it's not nice.
+                // TODO also save the reverse??;
+            } else if (data.some(function (d) { //Check that interactor is in the data
+                return d.accession === interactor.id;
+            })) {
                 interactor.source = element.accession;
                 interactors.push(interactor);
             } else if (interactor.id.includes('-')) { //handle isoforms
-                // TODO handle isoforms
-                // console.log(interactor.id);
+                // TODO handle isoforms console.log(interactor.id);
             }
         }
         element.interactions = interactors;
@@ -41,8 +39,13 @@ function process(data) {
             for (let location of element.subcellularLocations) {
                 for (let actualLocation of location.locations) {
                     addStringItem(actualLocation.location.value, subcellulartreeMenu);
-                    let locationSplit = actualLocation.location.value.split(', ');
-                    element.filterTerms = element.filterTerms.concat(locationSplit);
+                    let locationSplit = actualLocation
+                        .location
+                        .value
+                        .split(', ');
+                    element.filterTerms = element
+                        .filterTerms
+                        .concat(locationSplit);
                 }
             }
         }
@@ -53,7 +56,9 @@ function process(data) {
                         name: disease.diseaseId,
                         selected: false
                     };
-                    element.filterTerms.push(disease.diseaseId);
+                    element
+                        .filterTerms
+                        .push(disease.diseaseId);
                 }
             }
         }
@@ -63,23 +68,26 @@ function process(data) {
 
 function values(obj) {
     let ret = [];
-    for (let [k, v] of Object.entries(obj)) {
+    for (let [k,
+        v]of Object.entries(obj)) {
         ret.push(v);
     }
     return ret;
 }
 
 function getFilters() {
-    return [{
-        name: 'subcellularLocations',
-        label: 'Subcellular location',
-        type: 'tree',
-        items: subcellulartreeMenu
-    }, {
-        name: 'diseases',
-        label: 'Diseases',
-        items: values(diseases)
-    }];
+    return [
+        {
+            name: 'subcellularLocations',
+            label: 'Subcellular location',
+            type: 'tree',
+            items: subcellulartreeMenu
+        }, {
+            name: 'diseases',
+            label: 'Diseases',
+            items: values(diseases)
+        }
+    ];
 }
 
-export { load, getFilters };
+export {load, getFilters};
