@@ -4736,15 +4736,6 @@ function traverseTree(data, callback, depth) {
     }
 }
 
-function getPath(target, path) {
-    if (target.parent) {
-        path.push(target.parent);
-        return getPath(target.parent, path);
-    } else {
-        return path;
-    }
-}
-
 var asyncGenerator = function () {
   function AwaitValue(value) {
     this.value = value;
@@ -4997,24 +4988,35 @@ function process(data) {
             if (!element.interactions) {
                 continue;
             }
+            if (element.accession.includes('-')) {
+                element.isoform = element.accession;
+                element.accession = element.accession.split('-')[0];
+            }
             // Add source  to the nodes
 
             var _loop = function _loop(interactor) {
+                if (interactor.id && interactor.id.includes('-')) {
+                    interactor.isoform = interactor.id;
+                    interactor.id = interactor.id.split('-')[0];
+                }
                 // Add interaction for SELF
                 if (interactor.interactionType === 'SELF') {
                     interactor.source = element.accession;
                     interactor.id = element.accession;
-                    interactors.push(interactor); // TODO review this as it's not nice.
+                    addInteractor(interactor, interactors);
+                    // interactors.push(interactor) // TODO review this as it's not nice.
                     // TODO also save the reverse??;
                 } else if (data.some(function (d) {
                     //Check that interactor is in the data
                     return d.accession === interactor.id;
                 })) {
-                    interactor.source = element.accession;
-                    interactors.push(interactor);
-                } else if (interactor.id.includes('-')) {//handle isoforms
-                    // TODO handle isoforms console.log(interactor.id);
+                    interactor.source = element.accession.split('-')[0];
+                    addInteractor(interactor, interactors);
                 }
+                // else if (interactor.id.includes('-')) { console.log(interactor,
+                // element.accession); .accession     .split('-')[0];
+                // interactors.push(interactor); console.log(interactor.id); handle isoforms
+                // TODO handle isoforms console.log(interactor.id); }
             };
 
             var _iteratorNormalCompletion2 = true;
@@ -5143,6 +5145,20 @@ function process(data) {
     }
 
     return data;
+}
+
+function addInteractor(interactor, interactors) {
+    var existingInteractor = interactors.find(function (i) {
+        return interactor.id === i.id;
+    });
+    if (existingInteractor) {
+        //Merge objects
+        if (interactor.isoform) {
+            existingInteractor.isoform = interactor.isoform;
+        }
+    } else {
+        interactors.push(interactor);
+    }
 }
 
 function values$1(obj) {
@@ -5454,6 +5470,8 @@ function draw(el, accession, data) {
         uniprotRow.append('td').append('a').attr('href', '//uniprot.org/uniprot/' + source.accession).text('' + source.accession);
         uniprotRow.append('td').append('a').attr('href', '//uniprot.org/uniprot/' + target.accession).text('' + target.accession);
 
+        console.log(data);
+
         var diseaseRow = table.append('tr');
         diseaseRow.append('td').text('Pathology').attr('class', 'interaction-viewer-table_row-header');
         diseaseRow.append('td').html(formatDiseaseInfo(source.diseases, source.accession));
@@ -5553,70 +5571,16 @@ function updateFilterSelection() {
     }
 
     filterData();
-    updateSelectedFilterDisplay();
 }
 
 function getNameAsHTMLId(name) {
     return name.toLowerCase().replace(/\s|,|^\d/g, '_');
 }
 
-function removeFilter(d) {
-    d.selected = false;
-    updateFilterSelection();
-}
-
-function updateSelectedFilterDisplay() {
-    var filterDisplay = select('#filter-display').selectAll('span').data(filters.filter(function (d) {
-        return d.selected === true;
-    }));
-
-    filterDisplay.enter().append('span').attr("class", "filter-selected").merge(filterDisplay).text(function (d) {
-        return d.name;
-    }).on('click', removeFilter);
-
-    filterDisplay.exit().remove();
-}
-
-function clickFilter(d) {
+function clickFilter(d, filterName) {
+    console.log(filterName);
     selectAll('.dropdown-pane').style('visibility', 'hidden');
     d.selected = !d.selected;
-    updateFilterSelection();
-}
-
-function clickTreeFilter(d) {
-    selectAll('.dropdown-pane').style('visibility', 'hidden');
-    d.selected = !d.selected;
-    //De-select any descendants
-    traverseTree(d.children, function (node) {
-        return node.selected = false;
-    });
-    //De-select any parent
-    var path = getPath(d, []);
-    var _iteratorNormalCompletion5 = true;
-    var _didIteratorError5 = false;
-    var _iteratorError5 = undefined;
-
-    try {
-        for (var _iterator5 = path[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
-            var node = _step5.value;
-
-            node.selected = false;
-        }
-    } catch (err) {
-        _didIteratorError5 = true;
-        _iteratorError5 = err;
-    } finally {
-        try {
-            if (!_iteratorNormalCompletion5 && _iterator5.return) {
-                _iterator5.return();
-            }
-        } finally {
-            if (_didIteratorError5) {
-                throw _iteratorError5;
-            }
-        }
-    }
-
     updateFilterSelection();
 }
 
@@ -5649,30 +5613,32 @@ function createFilter(el, filtersToAdd) {
                         return getNameAsHTMLId(d.name);
                     }).text(function (d) {
                         return d.name;
-                    }).on('click', filter.type === 'tree' ? clickTreeFilter : clickFilter);
+                    }).on('click', function (d) {
+                        return clickFilter(d, filter.name);
+                    });
                 });
             } else {
-                var _iteratorNormalCompletion7 = true;
-                var _didIteratorError7 = false;
-                var _iteratorError7 = undefined;
+                var _iteratorNormalCompletion6 = true;
+                var _didIteratorError6 = false;
+                var _iteratorError6 = undefined;
 
                 try {
-                    for (var _iterator7 = filter.items[Symbol.iterator](), _step7; !(_iteratorNormalCompletion7 = (_step7 = _iterator7.next()).done); _iteratorNormalCompletion7 = true) {
-                        var d = _step7.value;
+                    for (var _iterator6 = filter.items[Symbol.iterator](), _step6; !(_iteratorNormalCompletion6 = (_step6 = _iterator6.next()).done); _iteratorNormalCompletion6 = true) {
+                        var d = _step6.value;
 
                         filters.push(d);
                     }
                 } catch (err) {
-                    _didIteratorError7 = true;
-                    _iteratorError7 = err;
+                    _didIteratorError6 = true;
+                    _iteratorError6 = err;
                 } finally {
                     try {
-                        if (!_iteratorNormalCompletion7 && _iterator7.return) {
-                            _iterator7.return();
+                        if (!_iteratorNormalCompletion6 && _iterator6.return) {
+                            _iterator6.return();
                         }
                     } finally {
-                        if (_didIteratorError7) {
-                            throw _iteratorError7;
+                        if (_didIteratorError6) {
+                            throw _iteratorError6;
                         }
                     }
                 }
@@ -5681,34 +5647,36 @@ function createFilter(el, filtersToAdd) {
                     return getNameAsHTMLId(d.name);
                 }).text(function (d) {
                     return d.name.toLowerCase();
-                }).on('click', clickFilter);
+                }).on('click', function (d) {
+                    return clickFilter(d, filter.name);
+                });
             }
         }
     };
 
-    var _iteratorNormalCompletion6 = true;
-    var _didIteratorError6 = false;
-    var _iteratorError6 = undefined;
+    var _iteratorNormalCompletion5 = true;
+    var _didIteratorError5 = false;
+    var _iteratorError5 = undefined;
 
     try {
-        for (var _iterator6 = filtersToAdd[Symbol.iterator](), _step6; !(_iteratorNormalCompletion6 = (_step6 = _iterator6.next()).done); _iteratorNormalCompletion6 = true) {
-            var filter = _step6.value;
+        for (var _iterator5 = filtersToAdd[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
+            var filter = _step5.value;
             var filterContainer;
             var ul;
 
             _loop(filter);
         }
     } catch (err) {
-        _didIteratorError6 = true;
-        _iteratorError6 = err;
+        _didIteratorError5 = true;
+        _iteratorError5 = err;
     } finally {
         try {
-            if (!_iteratorNormalCompletion6 && _iterator6.return) {
-                _iterator6.return();
+            if (!_iteratorNormalCompletion5 && _iterator5.return) {
+                _iterator5.return();
             }
         } finally {
-            if (_didIteratorError6) {
-                throw _iteratorError6;
+            if (_didIteratorError5) {
+                throw _iteratorError5;
             }
         }
     }

@@ -314,6 +314,8 @@ function draw(el, accession, data) {
             .attr('href', `//uniprot.org/uniprot/${target.accession}`)
             .text(`${target.accession}`);
 
+        console.log(data);
+
         var diseaseRow = table.append('tr');
         diseaseRow
             .append('td')
@@ -412,7 +414,6 @@ function updateFilterSelection() {
         item.classed("active", filter.selected);
     }
     filterData();
-    updateSelectedFilterDisplay();
 }
 
 function getNameAsHTMLId(name) {
@@ -426,40 +427,10 @@ function removeFilter(d) {
     updateFilterSelection();
 }
 
-function updateSelectedFilterDisplay() {
-    let filterDisplay = select('#filter-display')
-        .selectAll('span')
-        .data(filters.filter(d => d.selected === true));
-
-    filterDisplay
-        .enter()
-        .append('span')
-        .attr("class", "filter-selected")
-        .merge(filterDisplay)
-        .text(d => d.name)
-        .on('click', removeFilter);
-
-    filterDisplay
-        .exit()
-        .remove();
-}
-
-function clickFilter(d) {
+function clickFilter(d, filterName) {
+    console.log(filterName);
     selectAll('.dropdown-pane').style('visibility', 'hidden');
     d.selected = !d.selected;
-    updateFilterSelection();
-}
-
-function clickTreeFilter(d) {
-    selectAll('.dropdown-pane').style('visibility', 'hidden');
-    d.selected = !d.selected;
-    //De-select any descendants
-    traverseTree(d.children, node => node.selected = false);
-    //De-select any parent
-    let path = getPath(d, []);
-    for (let node of path) {
-        node.selected = false;
-    }
     updateFilterSelection();
 }
 
@@ -507,9 +478,7 @@ function createFilter(el, filtersToAdd) {
                         .style("padding-left", d.depth + "em")
                         .attr("id", d => getNameAsHTMLId(d.name))
                         .text(d => d.name)
-                        .on('click', filter.type === 'tree'
-                            ? clickTreeFilter
-                            : clickFilter);
+                        .on('click', d => clickFilter(d, filter.name));
                 });
             } else {
                 for (let d of filter.items) {
@@ -526,7 +495,7 @@ function createFilter(el, filtersToAdd) {
                     .append('li')
                     .attr('id', d => getNameAsHTMLId(d.name))
                     .text(d => d.name.toLowerCase())
-                    .on('click', clickFilter);
+                    .on('click', d => clickFilter(d, filter.name));
             }
         }
     }
