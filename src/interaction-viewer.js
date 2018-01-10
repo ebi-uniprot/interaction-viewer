@@ -6,7 +6,6 @@ import {addStringItem, traverseTree, getPath} from './treeMenu';
 import '../styles/main.css';
 
 let filters = [];
-let flatFilters = [];
 let nodes;
 
 function render({
@@ -428,8 +427,8 @@ function removeFilter(d) {
 }
 
 function clickFilter(d, filterName) {
-    console.log(filterName);
     selectAll('.dropdown-pane').style('visibility', 'hidden');
+    filters.filter(d => d.type === filterName).forEach(d => d.selected = false);
     d.selected = !d.selected;
     updateFilterSelection();
 }
@@ -471,6 +470,7 @@ function createFilter(el, filtersToAdd) {
                     .attr("id", `iv_${filter.name}`)
                     .attr("class", "dropdown-pane");
                 traverseTree(filter.items, function (d) {
+                    d.type = filter.name;
                     filters.push(d);
                     ul
                         .datum(d)
@@ -482,6 +482,7 @@ function createFilter(el, filtersToAdd) {
                 });
             } else {
                 for (let d of filter.items) {
+                    d.type = filter.name;
                     filters.push(d);
                 }
 
