@@ -107,6 +107,7 @@ function values(obj) {
 function getFilters() {
     return [
         {
+
             name: 'subcellularLocations',
             label: 'Subcellular location',
             type: 'tree',
