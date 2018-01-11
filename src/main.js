@@ -12,8 +12,12 @@ var loadComponent = function() {
             this._render();
         }
 
+        static get observedAttributes() {
+            return ['accession'];
+        }
+
         attributeChangedCallback(attrName, oldVal, newVal) {
-            if (attrName === 'accession') {
+            if (attrName === 'accession' && oldVal != null && oldVal != newVal) {
                 this._accession = newVal;
                 this._render();
             }

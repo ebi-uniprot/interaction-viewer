@@ -154,6 +154,10 @@ interaction-viewer .button {
     border: 1px solid #E8E8E8;
 }
 
+interaction-viewer .iv_reset {
+    display: block;
+}
+
 interaction-viewer .button:hover {
     color: #3a343a;
 }

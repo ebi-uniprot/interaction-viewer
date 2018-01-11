@@ -14,6 +14,7 @@ function render({
 }) {
     el.style.display = 'block';
     el.style.minHeight = '6em';
+
     // clear all previous vis
     select(el)
         .select('.interaction-title')
@@ -30,7 +31,6 @@ function render({
         .append('div')
         .attr('class', 'loader');
 
-    const test = ['one', 'two', 'three'];
     load(accession).then(data => {
         draw(el, accession, data);
     });
@@ -426,10 +426,24 @@ function removeFilter(d) {
     updateFilterSelection();
 }
 
+function ellipsis(text) {
+    const n = 25;
+    return (text.length > n) ? text.substr(0, n-1) + '...' : text;
+}
+
 function clickFilter(d, filterName) {
     selectAll('.dropdown-pane').style('visibility', 'hidden');
     filters.filter(d => d.type === filterName).forEach(d => d.selected = false);
     d.selected = !d.selected;
+    select(`[data-toggle=iv_${filterName}]`).text(ellipsis(d.name));
+    updateFilterSelection();
+}
+
+function resetAllFilters() {
+    filters.filter(d => d.selected).forEach(d => d.selected = false);
+    getFilters().forEach(d=> {
+        select(`[data-toggle=iv_${d.name}]`).text(d.label);
+    });
     updateFilterSelection();
 }
 
@@ -496,13 +510,20 @@ function createFilter(el, filtersToAdd) {
                     .append('li')
                     .attr('id', d => getNameAsHTMLId(d.name))
                     .text(d => d.name.toLowerCase())
-                    .on('click', d => clickFilter(d, filter.name));
+                    .on('click', d => {
+                        clickFilter(d, filter.name);
+                    });
             }
         }
     }
     container
-        .append("div")
-        .attr("id", "filter-display");
+        .append("button")
+        .attr('class', 'iv_reset')
+        .text("Reset filters")
+        .on('click', d => {
+            resetAllFilters();
+            return false;
+        });
 }
 
 function required(name) {
